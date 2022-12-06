@@ -30,7 +30,7 @@ struct Status {
                                  bool success, const std::string& output) = 0;
   virtual void BuildLoadDyndeps() = 0;
   virtual void BuildStarted() = 0;
-  virtual void BuildFinished() = 0;
+  virtual void BuildFinished(bool success, int64_t end_time_millis) = 0;
 
   virtual void Info(const char* msg, ...) = 0;
   virtual void Warning(const char* msg, ...) = 0;
@@ -49,7 +49,7 @@ struct StatusPrinter : Status {
                                  bool success, const std::string& output);
   virtual void BuildLoadDyndeps();
   virtual void BuildStarted();
-  virtual void BuildFinished();
+  virtual void BuildFinished(bool success, int64_t end_time_millis);
 
   virtual void Info(const char* msg, ...);
   virtual void Warning(const char* msg, ...);
@@ -78,6 +78,8 @@ struct StatusPrinter : Status {
 
   /// The custom progress status format to use.
   const char* progress_status_format_;
+  const char* build_succeeded_msg_;
+  const char* build_failed_msg_;
 
   template<size_t S>
   void SnprintfRate(double rate, char(&buf)[S], const char* format) const {

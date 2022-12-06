@@ -39,6 +39,14 @@ StatusPrinter::StatusPrinter(const BuildConfig& config)
   progress_status_format_ = getenv("NINJA_STATUS");
   if (!progress_status_format_)
     progress_status_format_ = "[%f/%t] ";
+
+  build_succeeded_msg_ = getenv("NINJA_STATUS_SUCCESS");
+  if (!build_succeeded_msg_)
+    build_succeeded_msg_ = "";
+
+  build_failed_msg_ = getenv("NINJA_STATUS_FAILURE");
+  if (!build_failed_msg_)
+    build_failed_msg_ = "";
 }
 
 void StatusPrinter::PlanHasTotalEdges(int total) {
@@ -140,9 +148,9 @@ void StatusPrinter::BuildStarted() {
   running_edges_ = 0;
 }
 
-void StatusPrinter::BuildFinished() {
+void StatusPrinter::BuildFinished(bool success, int64_t end_time_millis) {
   printer_.SetConsoleLocked(false);
-  printer_.PrintOnNewLine("");
+  printer_.PrintOnNewLine(FormatProgressStatus(success ? build_succeeded_msg_ : build_failed_msg_, end_time_millis));
 }
 
 string StatusPrinter::FormatProgressStatus(const char* progress_status_format,
@@ -208,7 +216,12 @@ string StatusPrinter::FormatProgressStatus(const char* progress_status_format,
         out += buf;
         break;
       }
-
+      case 'P': {
+        int percent = (100 * finished_edges_) / total_edges_;
+        snprintf(buf, sizeof(buf), "%i", percent);
+        out += buf;
+        break;
+      }
       case 'e': {
         snprintf(buf, sizeof(buf), "%.3f", time_millis_ / 1e3);
         out += buf;

@@ -637,14 +637,14 @@ bool Builder::Build(string* err) {
 
         if (!StartEdge(edge, err)) {
           Cleanup();
-          status_->BuildFinished();
+          status_->BuildFinished(false, GetTimeMillis() - start_time_millis_);
           return false;
         }
 
         if (edge->is_phony()) {
           if (!plan_.EdgeFinished(edge, Plan::kEdgeSucceeded, err)) {
             Cleanup();
-            status_->BuildFinished();
+            status_->BuildFinished(false, GetTimeMillis() - start_time_millis_);
             return false;
           }
         } else {
@@ -662,7 +662,7 @@ bool Builder::Build(string* err) {
       if (!command_runner_->WaitForCommand(&result) ||
           result.status == ExitInterrupted) {
         Cleanup();
-        status_->BuildFinished();
+        status_->BuildFinished(false, GetTimeMillis() - start_time_millis_);
         *err = "interrupted by user";
         return false;
       }
@@ -670,7 +670,7 @@ bool Builder::Build(string* err) {
       --pending_commands;
       if (!FinishCommand(&result, err)) {
         Cleanup();
-        status_->BuildFinished();
+        status_->BuildFinished(false, GetTimeMillis() - start_time_millis_);
         return false;
       }
 
@@ -684,7 +684,7 @@ bool Builder::Build(string* err) {
     }
 
     // If we get here, we cannot make any more progress.
-    status_->BuildFinished();
+    status_->BuildFinished(false, GetTimeMillis() - start_time_millis_);
     if (failures_allowed == 0) {
       if (config_.failures_allowed > 1)
         *err = "subcommands failed";
@@ -698,7 +698,7 @@ bool Builder::Build(string* err) {
     return false;
   }
 
-  status_->BuildFinished();
+  status_->BuildFinished(true, GetTimeMillis() - start_time_millis_);
   return true;
 }
 
